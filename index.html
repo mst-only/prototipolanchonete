@@ -3,65 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Protótipo Lanchonete</title>
+    <title>PDV Lanchonete - Protótipo</title>
     <style>
-        /* CSS - O "Maquiador" do site */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: #333; text-align: center; }
-        .form-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
-        button { padding: 12px 20px; background-color: #ff4757; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #ff6b81; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; border-bottom: 2px solid #ff4757; padding: 10px; color: #555; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
+        :root { --primary: #2ecc71; --secondary: #e74c3c; --dark: #2c3e50; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; background: #ecf0f1; }
+        
+        /* Lado Esquerdo: Cardápio */
+        .menu { flex: 2; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; overflow-y: auto; }
+        .produto-card { background: white; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .produto-card:hover { transform: scale(1.05); border: 2px solid var(--primary); }
+
+        /* Lado Direito: Carrinho */
+        .caixa { flex: 1; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .lista-pedido { flex: 1; overflow-y: auto; border-bottom: 1px solid #444; margin-bottom: 10px; }
+        .item-carrinho { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9em; }
+        .total { font-size: 2em; font-weight: bold; color: var(--primary); text-align: center; margin: 20px 0; }
+        .btn-finalizar { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🍔 Sistema Lanchonete (Protótipo)</h2>
-    
-    <div class="form-group">
-        <input type="text" id="nomeProduto" placeholder="Ex: X-Salada">
-        <input type="number" id="precoProduto" placeholder="R$ 0,00">
-        <button onclick="adicionarProduto()">Adicionar</button>
+    <div class="menu" id="vitrine">
+        </div>
+
+    <div class="caixa">
+        <h2>🛒 Pedido Atual</h2>
+        <div class="lista-pedido" id="carrinho">
+            </div>
+        <div class="total" id="display-total">R$ 0,00</div>
+        <button class="btn-finalizar" onclick="finalizarPedido()">FECHAR PEDIDO</button>
     </div>
 
-    <table id="tabelaProdutos">
-        <thead>
-            <tr>
-                <th>Produto</th>
-                <th>Preço</th>
-            </tr>
-        </thead>
-        <tbody>
-            </tbody>
-    </table>
-</div>
-
 <script>
-    // JavaScript - A "Ação" do site
-    function adicionarProduto() {
-        const nome = document.getElementById('nomeProduto').value;
-        const preco = document.getElementById('precoProduto').value;
+    // Simulação de Banco de Dados
+    const produtos = [
+        { id: 1, nome: 'X-Salgado', preco: 15.00 },
+        { id: 2, nome: 'X-Tudo', preco: 22.50 },
+        { id: 3, nome: 'Coca-Cola', preco: 7.00 },
+        { id: 4, nome: 'Batata Frita', preco: 12.00 },
+        { id: 5, nome: 'Suco Natural', preco: 8.50 }
+    ];
 
-        if (nome === '' || preco === '') {
-            alert("Preencha todos os campos!");
-            return;
-        }
+    let carrinho = [];
+    let total = 0;
 
-        const tabela = document.getElementById('tabelaProdutos').getElementsByTagName('tbody')[0];
-        const novaLinha = tabela.insertRow();
+    // Carregar produtos na tela
+    const vitrine = document.getElementById('vitrine');
+    produtos.forEach(p => {
+        vitrine.innerHTML += `
+            <div class="produto-card" onclick="adicionarAoCarrinho(${p.id})">
+                <strong>${p.nome}</strong><br>
+                R$ ${p.preco.toFixed(2)}
+            </div>
+        `;
+    });
 
-        novaLinha.innerHTML = `<td>${nome}</td><td>R$ ${parseFloat(preco).toFixed(2)}</td>`;
+    function adicionarAoCarrinho(id) {
+        const produto = produtos.find(p => p.id === id);
+        carrinho.push(produto);
+        atualizarInterface();
+    }
 
-        // Limpar os campos após adicionar
-        document.getElementById('nomeProduto').value = '';
-        document.getElementById('precoProduto').value = '';
+    function atualizarInterface() {
+        const lista = document.getElementById('carrinho');
+        lista.innerHTML = '';
+        total = 0;
+
+        carrinho.forEach((item, index) => {
+            total += item.preco;
+            lista.innerHTML += `
+                <div class="item-carrinho">
+                    <span>${item.nome}</span>
+                    <span>R$ ${item.preco.toFixed(2)}</span>
+                </div>
+            `;
+        });
+
+        document.getElementById('display-total').innerText = `R$ ${total.toFixed(2)}`;
+    }
+
+    function finalizarPedido() {
+        if(carrinho.length === 0) return alert("Carrinho vazio!");
+        alert(`Pedido finalizado com sucesso!\nTotal: R$ ${total.toFixed(2)}`);
+        carrinho = [];
+        atualizarInterface();
     }
 </script>
-
 </body>
 </html>
