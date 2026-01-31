@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protótipo Lanchonete</title>
+    <style>
+        /* CSS - O "Maquiador" do site */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #333; text-align: center; }
+        .form-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
+        button { padding: 12px 20px; background-color: #ff4757; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #ff6b81; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; border-bottom: 2px solid #ff4757; padding: 10px; color: #555; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🍔 Sistema Lanchonete (Protótipo)</h2>
+    
+    <div class="form-group">
+        <input type="text" id="nomeProduto" placeholder="Ex: X-Salada">
+        <input type="number" id="precoProduto" placeholder="R$ 0,00">
+        <button onclick="adicionarProduto()">Adicionar</button>
+    </div>
+
+    <table id="tabelaProdutos">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Preço</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // JavaScript - A "Ação" do site
+    function adicionarProduto() {
+        const nome = document.getElementById('nomeProduto').value;
+        const preco = document.getElementById('precoProduto').value;
+
+        if (nome === '' || preco === '') {
+            alert("Preencha todos os campos!");
+            return;
+        }
+
+        const tabela = document.getElementById('tabelaProdutos').getElementsByTagName('tbody')[0];
+        const novaLinha = tabela.insertRow();
+
+        novaLinha.innerHTML = `<td>${nome}</td><td>R$ ${parseFloat(preco).toFixed(2)}</td>`;
+
+        // Limpar os campos após adicionar
+        document.getElementById('nomeProduto').value = '';
+        document.getElementById('precoProduto').value = '';
+    }
+</script>
+
+</body>
+</html>
