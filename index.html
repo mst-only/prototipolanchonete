@@ -3,91 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDV Lanchonete - Protótipo</title>
+    <title>Lanchonete Pro - PDV & Gestão</title>
     <style>
-        :root { --primary: #2ecc71; --secondary: #e74c3c; --dark: #2c3e50; }
-        body { font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; background: #ecf0f1; }
+        :root { --primary: #2ecc71; --secondary: #e74c3c; --dark: #2c3e50; --gray: #bdc3c7; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #ecf0f1; display: flex; flex-direction: column; height: 100vh; }
         
-        /* Lado Esquerdo: Cardápio */
-        .menu { flex: 2; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; overflow-y: auto; }
-        .produto-card { background: white; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .produto-card:hover { transform: scale(1.05); border: 2px solid var(--primary); }
+        /* Navegação */
+        nav { background: var(--dark); padding: 10px 20px; display: flex; gap: 10px; }
+        nav button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; background: #34495e; color: white; }
+        nav button.active { background: var(--primary); }
 
-        /* Lado Direito: Carrinho */
-        .caixa { flex: 1; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; }
-        .lista-pedido { flex: 1; overflow-y: auto; border-bottom: 1px solid #444; margin-bottom: 10px; }
-        .item-carrinho { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9em; }
-        .total { font-size: 2em; font-weight: bold; color: var(--primary); text-align: center; margin: 20px 0; }
-        .btn-finalizar { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
+        .tela { display: none; padding: 20px; flex: 1; }
+        .tela.active { display: flex; }
+
+        /* Tela de Vendas */
+        .vendas-container { display: flex; width: 100%; gap: 20px; }
+        .vitrine { flex: 2; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; align-content: start; }
+        .produto-card { background: white; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 2px solid transparent; }
+        .produto-card:hover { border-color: var(--primary); }
+
+        .caixa { flex: 1; background: white; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .lista-pedido { flex: 1; overflow-y: auto; margin: 15px 0; border-top: 1px solid #eee; }
+        .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .remove-btn { color: var(--secondary); cursor: pointer; font-weight: bold; border: none; background: none; }
+
+        /* Pagamento */
+        .pagamento-area { background: #f9f9f9; padding: 15px; border-radius: 5px; }
+        .pagamento-area select, .pagamento-area input { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .total-valor { font-size: 1.8em; color: var(--primary); font-weight: bold; text-align: center; margin-bottom: 10px; }
+        .troco-valor { font-size: 1.2em; color: var(--secondary); text-align: center; font-weight: bold; }
+
+        /* Tela de Gerência */
+        .gerencia-container { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 500px; margin: auto; }
+        .form-gerencia input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; }
+        
+        .btn-acao { width: 100%; padding: 15px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-green { background: var(--primary); }
+        .btn-blue { background: #3498db; }
     </style>
 </head>
 <body>
 
-    <div class="menu" id="vitrine">
-        </div>
+    <nav>
+        <button onclick="mudarTela('vendas')" id="btn-vendas" class="active">PDV (Vendas)</button>
+        <button onclick="mudarTela('gerencia')" id="btn-gerencia">Gerenciar Produtos</button>
+    </nav>
 
-    <div class="caixa">
-        <h2>🛒 Pedido Atual</h2>
-        <div class="lista-pedido" id="carrinho">
+    <div id="vendas" class="tela active">
+        <div class="vendas-container">
+            <div class="vitrine" id="vitrine"></div>
+            
+            <div class="caixa">
+                <h3>🛒 Pedido</h3>
+                <div class="lista-pedido" id="lista-carrinho"></div>
+                
+                <div class="pagamento-area">
+                    <div class="total-valor" id="total-venda">R$ 0,00</div>
+                    
+                    <label>Forma de Pagamento:</label>
+                    <select id="metodo-pagamento">
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cartao">Cartão de Crédito/Débito</option>
+                        <option value="pix">PIX</option>
+                    </select>
+
+                    <label>Valor Recebido:</label>
+                    <input type="number" id="valor-pago" placeholder="0.00" oninput="calcularTroco()">
+                    
+                    <div class="troco-valor" id="troco-display">Troco: R$ 0,00</div>
+                </div>
+                
+                <button class="btn-acao btn-green" onclick="finalizarVenda()">FINALIZAR E IMPRIMIR</button>
             </div>
-        <div class="total" id="display-total">R$ 0,00</div>
-        <button class="btn-finalizar" onclick="finalizarPedido()">FECHAR PEDIDO</button>
+        </div>
+    </div>
+
+    <div id="gerencia" class="tela">
+        <div class="gerencia-container">
+            <h3>➕ Adicionar Novo Produto</h3>
+            <div class="form-gerencia">
+                <input type="text" id="novo-nome" placeholder="Nome do Produto (Ex: Suco de Laranja)">
+                <input type="number" id="novo-preco" placeholder="Preço (Ex: 12.50)">
+                <button class="btn-acao btn-blue" onclick="adicionarNovoProduto()">CADASTRAR PRODUTO</button>
+            </div>
+        </div>
     </div>
 
 <script>
-    // Simulação de Banco de Dados
-    const produtos = [
-        { id: 1, nome: 'X-Salgado', preco: 15.00 },
-        { id: 2, nome: 'X-Tudo', preco: 22.50 },
-        { id: 3, nome: 'Coca-Cola', preco: 7.00 },
-        { id: 4, nome: 'Batata Frita', preco: 12.00 },
-        { id: 5, nome: 'Suco Natural', preco: 8.50 }
+    // Memória do Sistema
+    let produtos = [
+        { nome: 'X-Burger', preco: 15.00 },
+        { nome: 'Coca-Cola', preco: 7.00 }
     ];
-
     let carrinho = [];
-    let total = 0;
 
-    // Carregar produtos na tela
-    const vitrine = document.getElementById('vitrine');
-    produtos.forEach(p => {
-        vitrine.innerHTML += `
-            <div class="produto-card" onclick="adicionarAoCarrinho(${p.id})">
-                <strong>${p.nome}</strong><br>
-                R$ ${p.preco.toFixed(2)}
-            </div>
-        `;
-    });
-
-    function adicionarAoCarrinho(id) {
-        const produto = produtos.find(p => p.id === id);
-        carrinho.push(produto);
-        atualizarInterface();
+    // Alternar entre Telas
+    function mudarTela(telaId) {
+        document.querySelectorAll('.tela').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(telaId).classList.add('active');
+        document.getElementById('btn-' + telaId).classList.add('active');
     }
 
-    function atualizarInterface() {
-        const lista = document.getElementById('carrinho');
+    // Renderizar Vitrine
+    function renderizarVitrine() {
+        const vitrine = document.getElementById('vitrine');
+        vitrine.innerHTML = '';
+        produtos.forEach((p, index) => {
+            vitrine.innerHTML += `
+                <div class="produto-card" onclick="adicionarAoCarrinho(${index})">
+                    <strong>${p.nome}</strong><br>
+                    R$ ${p.preco.toFixed(2)}
+                </div>
+            `;
+        });
+    }
+
+    // Lógica do Carrinho
+    function adicionarAoCarrinho(index) {
+        carrinho.push(produtos[index]);
+        atualizarCarrinho();
+    }
+
+    function removerDoCarrinho(index) {
+        carrinho.splice(index, 1);
+        atualizarCarrinho();
+    }
+
+    function atualizarCarrinho() {
+        const lista = document.getElementById('lista-carrinho');
         lista.innerHTML = '';
-        total = 0;
+        let total = 0;
 
         carrinho.forEach((item, index) => {
             total += item.preco;
             lista.innerHTML += `
-                <div class="item-carrinho">
+                <div class="item-row">
                     <span>${item.nome}</span>
-                    <span>R$ ${item.preco.toFixed(2)}</span>
+                    <span>R$ ${item.preco.toFixed(2)} 
+                        <button class="remove-btn" onclick="removerDoCarrinho(${index})">X</button>
+                    </span>
                 </div>
             `;
         });
 
-        document.getElementById('display-total').innerText = `R$ ${total.toFixed(2)}`;
+        document.getElementById('total-venda').innerText = `R$ ${total.toFixed(2)}`;
+        calcularTroco();
     }
 
-    function finalizarPedido() {
-        if(carrinho.length === 0) return alert("Carrinho vazio!");
-        alert(`Pedido finalizado com sucesso!\nTotal: R$ ${total.toFixed(2)}`);
-        carrinho = [];
-        atualizarInterface();
+    // Lógica de Pagamento
+    function calcularTroco() {
+        const total = parseFloat(document.getElementById('total-venda').innerText.replace('R$ ', ''));
+        const pago = parseFloat(document.getElementById('valor-pago').value) || 0;
+        const troco = pago - total;
+        
+        document.getElementById('troco-display').innerText = `Troco: R$ ${troco > 0 ? troco.toFixed(2) : '0.00'}`;
     }
+
+    // Lógica de Gerência
+    function adicionarNovoProduto() {
+        const nome = document.getElementById('novo-nome').value;
+        const preco = parseFloat(document.getElementById('novo-preco').value);
+
+        if (nome && preco) {
+            produtos.push({ nome, preco });
+            renderizarVitrine();
+            alert("Produto adicionado com sucesso!");
+            document.getElementById('novo-nome').value = '';
+            document.getElementById('novo-preco').value = '';
+            mudarTela('vendas');
+        } else {
+            alert("Preencha todos os campos corretamente.");
+        }
+    }
+
+    function finalizarVenda() {
+        if (carrinho.length === 0) return alert("Carrinho vazio!");
+        const metodo = document.getElementById('metodo-pagamento').value;
+        alert(`Venda Finalizada!\nTipo: ${metodo.toUpperCase()}\nObrigado!`);
+        carrinho = [];
+        document.getElementById('valor-pago').value = '';
+        atualizarCarrinho();
+    }
+
+    // Início
+    renderizarVitrine();
 </script>
 </body>
 </html>
