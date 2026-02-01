@@ -2,198 +2,127 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>PDV PRO | Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --text: white; --border: rgba(255, 255, 255, 0.1); }
-        .light-mode { --bg: #f1f5f9; --card: rgba(255, 255, 255, 0.9); --text: #1e293b; --border: rgba(0, 0, 0, 0.1); }
+        .light-mode { --bg: #f8fafc; --card: rgba(255, 255, 255, 0.9); --text: #0f172a; --border: rgba(0, 0, 0, 0.1); }
         
-        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            transition: 0.3s;
+            padding-top: env(safe-area-inset-top); /* Proteção para o notch do celular */
+        }
+        
         .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .active-btn { color: #22c55e; border-bottom: 3px solid #22c55e; }
-        .input-pay { background: #020617; border: 2px solid #22c55e; border-radius: 15px; padding: 12px; outline: none; width: 100%; text-align: center; font-size: 1.2rem; font-weight: 900; color: #22c55e; }
+        
+        /* Ajuste do Título para não sumir */
+        .logo-container { padding-top: 20px; padding-bottom: 20px; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
 
-    <header class="p-6 border-b border-gray-800 flex justify-between items-center shadow-xl relative z-50 bg-opacity-90">
-        <div class="flex-1"></div>
-        <div class="text-center flex-1">
-            <h1 class="text-4xl font-black italic tracking-tighter flex items-center justify-center gap-2">
+    <header class="logo-container border-b border-gray-800 flex justify-between items-center px-6 glass relative z-50">
+        <div class="w-10"></div> <div class="text-center">
+            <h1 class="text-3xl font-black italic tracking-tighter flex items-center justify-center gap-2">
                 <i class="fas fa-leaf text-green-500"></i> PDV <span class="text-green-500">PRO</span>
             </h1>
-            <p class="text-[9px] text-gray-500 font-bold uppercase tracking-[0.3em]">Inteligência em Vendas</p>
+            <p class="text-[8px] text-gray-500 font-bold uppercase tracking-[0.4em]">Inteligência em Vendas</p>
         </div>
-        <div class="flex-1 flex justify-end">
-            <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass flex items-center justify-center shadow-lg">
-                <i id="theme-icon" class="fas fa-moon text-yellow-400"></i>
-            </button>
-        </div>
+
+        <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass flex items-center justify-center shadow-lg">
+            <i id="theme-icon" class="fas fa-moon text-yellow-400 text-lg"></i>
+        </button>
     </header>
 
-    <div id="modal-pag" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-4">
-        <div class="glass w-full max-w-md p-6 rounded-[2.5rem]">
-            <h3 class="text-[10px] font-black mb-6 flex justify-between uppercase italic text-gray-500 tracking-widest">
-                <span>PAGAMENTO | PDV PRO</span> 
-                <button onclick="fecharModalPag()">&times;</button>
-            </h3>
-            
-            <div class="bg-gray-900 p-6 rounded-3xl mb-4 text-center border border-slate-800">
-                <span class="text-4xl font-black text-[#22c55e]" id="pag-total-devido">R$ 0,00</span>
-                <div class="mt-3 flex flex-wrap justify-center gap-2 text-white" id="lista-pagos"></div>
-                <div class="mt-4 flex justify-between text-[10px] font-bold uppercase pt-3 border-t border-slate-700/50">
-                    <span class="text-red-500">Falta: <span id="pag-faltando">R$ 0,00</span></span>
-                    <span class="text-blue-400 hidden" id="box-troco">Troco: <span id="pag-troco">R$ 0,00</span></span>
-                </div>
-            </div>
-
-            <div id="menu-metodos" class="grid grid-cols-2 gap-3">
-                <button onclick="selecionarMetodo('Dinheiro', 'text-green-500')" class="glass p-4 rounded-2xl flex flex-col items-center gap-2">
-                    <i class="fas fa-money-bill-wave text-xl text-green-500"></i> <span class="text-[10px] font-bold uppercase">Dinheiro</span>
-                </button>
-                <button onclick="selecionarMetodo('Débito', 'text-blue-400')" class="glass p-4 rounded-2xl flex flex-col items-center gap-2">
-                    <i class="fas fa-credit-card text-xl text-blue-400"></i> <span class="text-[10px] font-bold uppercase">Débito</span>
-                </button>
-                <button onclick="selecionarMetodo('Crédito', 'text-purple-400')" class="glass p-4 rounded-2xl flex flex-col items-center gap-2">
-                    <i class="fas fa-credit-card text-xl text-purple-400"></i> <span class="text-[10px] font-bold uppercase">Crédito</span>
-                </button>
-                <button onclick="selecionarMetodo('Pix', 'text-teal-400')" class="glass p-4 rounded-2xl flex flex-col items-center gap-2">
-                    <i class="fas fa-bolt text-xl text-teal-400"></i> <span class="text-[10px] font-bold uppercase">Pix</span>
-                </button>
-            </div>
-
-            <div id="area-digitacao" class="hidden">
-                <div class="flex justify-between items-center mb-4 text-gray-400 font-bold text-xs uppercase">
-                    <span id="nome-selecionado"></span> <button onclick="voltarMenu()" class="text-red-400">Voltar</button>
-                </div>
-                <input type="number" id="valor-input" class="input-pay mb-4" placeholder="0.00">
-                <button onclick="confirmarValor()" class="w-full bg-green-500 text-black font-black py-4 rounded-2xl uppercase text-xs">Confirmar</button>
-            </div>
-
-            <button id="btn-concluir" disabled onclick="concluirVenda()" class="hidden w-full bg-green-500 text-black font-black py-5 rounded-2xl mt-4 uppercase text-xs">Concluir Venda</button>
-        </div>
-    </div>
-
-    <nav class="border-b border-gray-800 flex px-2 pt-1 bg-opacity-50">
-        <button onclick="mudarAba('vendas', this)" class="aba-btn active-btn py-4 text-[10px] font-black uppercase flex-1">Vendas</button>
-        <button onclick="mudarAba('estoque', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500">Estoque</button>
-        <button onclick="mudarAba('balanco', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500">Balanço</button>
+    <nav class="border-b border-gray-800 flex px-2 bg-black/20">
+        <button onclick="mudarAba('vendas', this)" class="aba-btn active-btn py-4 text-[10px] font-black uppercase flex-1 tracking-widest">Vendas</button>
+        <button onclick="mudarAba('estoque', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500 tracking-widest">Estoque</button>
+        <button onclick="mudarAba('balanco', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500 tracking-widest">Balanço</button>
     </nav>
 
     <main class="flex-1 overflow-y-auto p-5 pb-44">
-        <div id="vendas" class="tab-content active"><div id="vendas-container" class="space-y-8"></div></div>
-        <div id="estoque" class="tab-content"><div id="estoque-lista" class="space-y-3"></div></div>
+        <div id="vendas" class="tab-content active">
+            <div id="vendas-container" class="space-y-8"></div>
+        </div>
+
+        <div id="estoque" class="tab-content">
+            <div class="glass p-6 rounded-3xl mb-4 text-center">
+                <i class="fas fa-box-open text-3xl mb-2 text-gray-500"></i>
+                <p class="text-xs text-gray-400">Gerencie seus produtos e categorias aqui no sistema real.</p>
+            </div>
+            <div id="estoque-lista" class="space-y-3"></div>
+        </div>
+
         <div id="balanco" class="tab-content">
-            <div class="glass p-8 rounded-[2.5rem] border-b-4 border-green-500 text-center mb-6">
-                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1">Total Bruto</p>
+            <div class="glass p-8 rounded-[2.5rem] border-b-4 border-green-500 text-center mb-4">
+                <p class="text-gray-500 text-[10px] font-bold uppercase mb-1">Faturamento Total</p>
                 <h3 id="bal-bruto" class="text-4xl font-black italic text-green-500">R$ 0,00</h3>
             </div>
-            <div class="grid grid-cols-2 gap-3" id="fluxo-caixa">
-                </div>
+            <div class="grid grid-cols-2 gap-3" id="fluxo-detalhado">
+                <div class="glass p-4 rounded-2xl"><p class="text-[8px] text-gray-500 uppercase font-bold">Dinheiro</p><h4 id="bal-dinheiro" class="font-black">R$ 0,00</h4></div>
+                <div class="glass p-4 rounded-2xl"><p class="text-[8px] text-gray-500 uppercase font-bold">Pix</p><h4 id="bal-pix" class="font-black">R$ 0,00</h4></div>
+                <div class="glass p-4 rounded-2xl"><p class="text-[8px] text-gray-500 uppercase font-bold">Débito</p><h4 id="bal-debito" class="font-black">R$ 0,00</h4></div>
+                <div class="glass p-4 rounded-2xl"><p class="text-[8px] text-gray-500 uppercase font-bold">Crédito</p><h4 id="bal-credito" class="font-black">R$ 0,00</h4></div>
+            </div>
         </div>
     </main>
 
     <footer class="fixed bottom-0 left-0 right-0 glass border-t border-white/5 p-6 rounded-t-[2.5rem] z-50">
         <div class="flex justify-between items-center">
-            <div><p class="text-[8px] uppercase text-gray-500 font-black">PDV PRO</p><h2 id="total-display" class="text-3xl font-black italic">R$ 0,00</h2></div>
-            <button onclick="abrirPagamento()" class="bg-green-500 text-black font-black px-12 py-5 rounded-2xl shadow-2xl text-xs uppercase">Pagar</button>
+            <div><p class="text-[8px] uppercase text-gray-500 font-black">Total</p><h2 id="total-display" class="text-3xl font-black italic">R$ 0,00</h2></div>
+            <button onclick="abrirPagamento()" class="bg-green-500 text-black font-black px-12 py-5 rounded-2xl shadow-xl text-xs uppercase tracking-widest active:scale-95">Pagar</button>
         </div>
     </footer>
 
-    <script>
-        let categorias = ['Lanches', 'Bebidas'];
-        let produtos = [{id:1, n:'Burger Pro', p:25.00, c:'Lanches'}, {id:2, n:'Refrigerante', p:8.00, c:'Bebidas'}];
-        let totalPedido = 0; let totalPagoAcumulado = 0; let pagamentosVendaAtual = []; let metodoAtual = "";
-        let caixa = { Dinheiro: 0, Pix: 0, Débito: 0, Crédito: 0, Total: 0 };
+    <div id="modal-pag" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-4">
+        </div>
 
+    <script>
+        // Lógica de Temas
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             const icon = document.getElementById('theme-icon');
-            if (document.body.classList.contains('light-mode')) {
-                icon.className = "fas fa-sun text-orange-500";
-            } else {
-                icon.className = "fas fa-moon text-yellow-400";
-            }
+            icon.className = document.body.classList.contains('light-mode') ? "fas fa-sun text-orange-500" : "fas fa-moon text-yellow-400";
         }
 
+        // Funções de Venda e Abas
+        function mudarAba(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.aba-btn').forEach(b => { b.classList.remove('active-btn'); b.classList.add('text-gray-500'); });
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active-btn'); btn.classList.remove('text-gray-500');
+        }
+
+        // Dados Iniciais
+        let categorias = ['Lanches', 'Bebidas'];
+        let produtos = [{id:1, n:'Burger Pro', p:25.00, c:'Lanches'}, {id:2, n:'Refrigerante', p:8.00, c:'Bebidas'}];
+        
         function renderVendas() {
             document.getElementById('vendas-container').innerHTML = categorias.map(cat => `
-                <div>
-                    <h3 class="text-[10px] font-black uppercase text-green-500 mb-4 tracking-widest flex items-center gap-2"><span class="w-1 h-1 bg-green-500 rounded-full"></span> ${cat}</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        ${produtos.filter(p => p.c === cat).map(p => `
-                            <div onclick="add(${p.id})" class="glass p-5 rounded-2xl active:bg-green-500 transition group text-left">
-                                <h4 class="font-bold text-sm">${p.n}</h4>
-                                <p class="text-xs text-gray-500">R$ ${p.p.toFixed(2)}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
+                <div><h3 class="text-[10px] font-black uppercase text-green-500 mb-4 tracking-widest flex items-center gap-2">
+                <span class="w-1 h-1 bg-green-500 rounded-full"></span> ${cat}</h3>
+                <div class="grid grid-cols-2 gap-4">${produtos.filter(p => p.c === cat).map(p => `
+                <div onclick="add(${p.id})" class="glass p-5 rounded-2xl active:bg-green-500 transition text-left">
+                <h4 class="font-bold text-sm">${p.n}</h4><p class="text-xs text-gray-400">R$ ${p.p.toFixed(2)}</p></div>`).join('')}</div></div>`).join('');
         }
 
+        let totalPedido = 0;
         function add(id) {
             const p = produtos.find(x => x.id === id);
             totalPedido += p.p;
             document.getElementById('total-display').innerText = `R$ ${totalPedido.toFixed(2)}`;
         }
 
-        function abrirPagamento() {
-            if (totalPedido === 0) return;
-            totalPagoAcumulado = 0; pagamentosVendaAtual = [];
-            document.getElementById('lista-pagos').innerHTML = "";
-            document.getElementById('pag-total-devido').innerText = `R$ ${totalPedido.toFixed(2)}`;
-            document.getElementById('pag-faltando').innerText = `R$ ${totalPedido.toFixed(2)}`;
-            document.getElementById('modal-pag').classList.remove('hidden');
-            document.getElementById('menu-metodos').classList.remove('hidden');
-            document.getElementById('area-digitacao').classList.add('hidden');
-            document.getElementById('btn-concluir').classList.add('hidden');
-        }
-
-        function selecionarMetodo(nome) {
-            metodoAtual = nome;
-            document.getElementById('menu-metodos').classList.add('hidden');
-            document.getElementById('area-digitacao').classList.remove('hidden');
-            document.getElementById('nome-selecionado').innerText = nome;
-            document.getElementById('valor-input').value = (totalPedido - totalPagoAcumulado).toFixed(2);
-        }
-
-        function confirmarValor() {
-            const val = parseFloat(document.getElementById('valor-input').value) || 0;
-            if(val <= 0) return;
-            totalPagoAcumulado += val;
-            pagamentosVendaAtual.push({metodo: metodoAtual, valor: val});
-            document.getElementById('lista-pagos').innerHTML = pagamentosVendaAtual.map(p => `<span class="bg-green-500 text-black text-[9px] px-2 py-1 rounded font-bold">${p.metodo}: R$ ${p.valor.toFixed(2)}</span>`).join('');
-            
-            const falta = totalPedido - totalPagoAcumulado;
-            document.getElementById('pag-faltando').innerText = `R$ ${Math.max(0, falta).toFixed(2)}`;
-
-            if (falta <= 0) {
-                document.getElementById('area-digitacao').classList.add('hidden');
-                document.getElementById('btn-concluir').classList.remove('hidden');
-                document.getElementById('btn-concluir').disabled = false;
-            } else { voltarMenu(); }
-        }
-
-        function concluirVenda() {
-            pagamentosVendaAtual.forEach(p => { caixa[p.metodo] += p.valor; });
-            caixa.Total += totalPedido;
-            document.getElementById('bal-bruto').innerText = `R$ ${caixa.Total.toFixed(2)}`;
-            alert("PDV PRO: Sucesso!");
-            totalPedido = 0;
-            document.getElementById('total-display').innerText = `R$ 0,00`;
-            fecharModalPag();
-        }
-
-        function fecharModalPag() { document.getElementById('modal-pag').classList.add('hidden'); }
-        function voltarMenu() { document.getElementById('area-digitacao').classList.add('hidden'); document.getElementById('menu-metodos').classList.remove('hidden'); }
-        function mudarAba(id, btn) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.aba-btn').forEach(b => {b.classList.remove('active-btn'); b.classList.add('text-gray-500');}); document.getElementById(id).classList.add('active'); btn.classList.add('active-btn'); }
-
         renderVendas();
     </script>
 </body>
-</html>
+                                                                                                </html>
+        
