@@ -9,12 +9,33 @@
     <style>
         :root { --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --text: white; --border: rgba(255, 255, 255, 0.1); }
         .light-mode { --bg: #f8fafc; --card: rgba(255, 255, 255, 0.9); --text: #0f172a; --border: rgba(0, 0, 0, 0.1); }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; padding-top: env(safe-area-inset-top); }
+        
+        body { 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            transition: 0.3s; 
+            padding-top: env(safe-area-inset-top); 
+        }
+        
         .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .active-btn { color: #22c55e; border-bottom: 3px solid #22c55e; }
-        .input-pay { background: #020617; border: 2px solid #22c55e; border-radius: 12px; padding: 12px; outline: none; width: 100%; text-align: center; font-weight: 900; color: #22c55e; }
+        
+        .input-pay { 
+            background: #020617; 
+            border: 2px solid #22c55e; 
+            border-radius: 15px; 
+            padding: 15px; 
+            outline: none; 
+            width: 100%; 
+            text-align: center; 
+            font-size: 1.5rem; 
+            font-weight: 900; 
+            color: #22c55e; 
+        }
+
         .logo-area { padding: 25px 0; }
     </style>
 </head>
@@ -49,7 +70,7 @@
                 <h3 class="text-[10px] font-black uppercase text-green-500 mb-4">Gerenciar Categorias</h3>
                 <div id="categorias-lista" class="flex flex-wrap gap-2 mb-4"></div>
                 <div class="flex gap-2">
-                    <input type="text" id="nova-cat" class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex-1 text-xs" placeholder="Nova Categoria">
+                    <input type="text" id="nova-cat" class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex-1 text-xs text-white outline-none" placeholder="Nova Categoria">
                     <button onclick="addCat()" class="bg-green-500 text-black px-4 rounded-xl font-bold">+</button>
                 </div>
             </div>
@@ -61,7 +82,8 @@
                 <h3 id="bal-bruto" class="text-4xl font-black italic text-green-500">R$ 0,00</h3>
                 <p class="text-gray-500 text-[10px] uppercase font-bold mt-2">Faturamento Total</p>
             </div>
-            <div id="caixas-detalhados" class="grid grid-cols-2 gap-3"></div>
+            <div id="caixas-detalhados" class="grid grid-cols-2 gap-3 text-center">
+                </div>
         </div>
     </main>
 
@@ -119,6 +141,13 @@
             icon.className = document.body.classList.contains('light-mode') ? "fas fa-sun text-orange-500" : "fas fa-moon text-yellow-400";
         }
 
+        function mudarAba(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.aba-btn').forEach(b => { b.classList.remove('active-btn'); b.classList.add('text-gray-500'); });
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active-btn'); btn.classList.remove('text-gray-500');
+        }
+
         function renderVendas() {
             document.getElementById('vendas-container').innerHTML = categorias.map(cat => `
                 <div><h3 class="text-[10px] font-black uppercase text-green-500 mb-4 tracking-widest flex items-center gap-2"><span class="w-1 h-1 bg-green-500 rounded-full"></span> ${cat}</h3>
@@ -151,6 +180,7 @@
             document.getElementById('area-valor').classList.add('hidden');
             document.getElementById('btn-concluir').classList.add('hidden');
             document.getElementById('tags-pago').innerHTML = "";
+            document.getElementById('box-troco').classList.add('hidden');
         }
 
         function setMetodo(m) {
@@ -159,10 +189,12 @@
             document.getElementById('area-valor').classList.remove('hidden');
             document.getElementById('metodo-nome').innerText = m;
             document.getElementById('valor-input').value = (totalPedido - pagoAcumulado).toFixed(2);
+            document.getElementById('valor-input').focus();
         }
 
         function confirmarValor() {
             const v = parseFloat(document.getElementById('valor-input').value) || 0;
+            if(v <= 0) return;
             pagoAcumulado += v;
             pagamentosVenda.push({m: metodoAtual, v: v});
             document.getElementById('tags-pago').innerHTML = pagamentosVenda.map(p => `<span class="bg-green-500 text-black text-[9px] px-2 py-1 rounded font-bold">${p.m}: R$ ${p.v.toFixed(2)}</span>`).join('');
@@ -174,7 +206,10 @@
                 document.getElementById('area-valor').classList.add('hidden');
                 document.getElementById('btn-concluir').classList.remove('hidden');
                 document.getElementById('btn-concluir').disabled = false;
-                if(pagoAcumulado > totalPedido && metodoAtual === 'Dinheiro') {
+                
+                // Cálculo de troco exclusivo para Dinheiro
+                const dPago = pagamentosVenda.filter(p => p.m === 'Dinheiro').reduce((acc, p) => acc + p.v, 0);
+                if(pagoAcumulado > totalPedido && dPago > 0) {
                     document.getElementById('box-troco').classList.remove('hidden');
                     document.getElementById('pag-troco').innerText = `R$ ${(pagoAcumulado - totalPedido).toFixed(2)}`;
                 }
@@ -182,9 +217,18 @@
         }
 
         function concluirVenda() {
-            pagamentosVenda.forEach(p => caixa[p.m] += p.v);
+            const troco = (pagoAcumulado > totalPedido) ? (pagoAcumulado - totalPedido) : 0;
+            
+            pagamentosVenda.forEach(p => {
+                if(p.m === 'Dinheiro') {
+                    caixa.Dinheiro += (p.v - troco); // Desconta o troco do caixa
+                } else {
+                    caixa[p.m] += p.v;
+                }
+            });
             caixa.Total += totalPedido;
-            alert("PDV PRO: Venda Concluída!");
+
+            alert("PDV PRO: Venda Concluída! ✅");
             totalPedido = 0;
             document.getElementById('total-display').innerText = `R$ 0,00`;
             fecharModalPag();
@@ -203,7 +247,6 @@
         function addCat() { const n = document.getElementById('nova-cat').value; if(n) { categorias.push(n); document.getElementById('nova-cat').value=''; renderEstoque(); renderVendas(); } }
         function fecharModalPag() { document.getElementById('modal-pag').classList.add('hidden'); }
         function cancelarMetodo() { document.getElementById('area-valor').classList.add('hidden'); document.getElementById('menu-metodos').classList.remove('hidden'); }
-        function mudarAba(id, btn) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.aba-btn').forEach(b => {b.classList.remove('active-btn'); b.classList.add('text-gray-500');}); document.getElementById(id).classList.add('active'); btn.classList.add('active-btn'); }
 
         renderVendas(); renderEstoque(); atualizarBalanco();
     </script>
