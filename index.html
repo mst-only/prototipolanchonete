@@ -3,134 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Vendas</title>
+    <title>Protótipo de Vendas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #0f172a; /* Fundo Escuro Original */
-            color: white;
-        }
-        .card-dark {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-        }
-        select option {
-            background-color: #1e293b;
-            color: white;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4">
 
-    <div class="max-w-md mx-auto space-y-6">
+    <div class="max-w-md mx-auto space-y-4">
         
-        <div class="card-dark p-6 rounded-3xl shadow-xl">
-            <h2 class="text-xl font-bold mb-4">Resumo do Pedido</h2>
+        <div class="bg-[#EEF2FF] p-6 rounded-[24px]">
+            <h2 class="text-[#1E293B] text-xl font-bold mb-6">Resumo do Pedido</h2>
             <div class="flex justify-between items-center">
-                <span class="text-slate-400">Itens Selecionados</span>
-                <span class="text-2xl font-bold" id="total-venda">R$ 150,00</span>
+                <span class="text-[#64748B]">Itens Selecionados</span>
+                <span class="text-[#1E293B] text-xl font-bold">R$ 150,00</span>
             </div>
         </div>
 
-        <div class="card-dark p-6 rounded-3xl shadow-xl">
-            <h2 class="text-xl font-bold mb-6 text-center">Finalizar Venda</h2>
-            
-            <div class="mb-6 p-4 bg-slate-900/50 rounded-2xl border border-slate-700 text-center">
-                <p class="text-xs uppercase text-slate-500 font-bold mb-1">Restante a Pagar</p>
-                <p id="valor-restante" class="text-3xl font-black text-blue-400">R$ 150,00</p>
-            </div>
+        <div class="bg-white p-6 rounded-[24px] shadow-sm border border-[#F1F5F9]">
+            <h2 class="text-[#1E293B] text-xl font-bold mb-6">Finalizar Venda</h2>
 
-            <div id="lista-pagamentos" class="space-y-4 mb-6">
+            <div id="lista-pagamentos" class="space-y-3 mb-4">
                 </div>
 
-            <div class="relative group">
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Escolher Forma de Pagamento:</label>
-                <select id="select-pagamento" 
-                        onchange="adicionarInputPagamento(this.value)"
-                        class="w-full h-14 px-4 bg-slate-800 border border-slate-600 rounded-2xl text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer">
-                    <option value="" disabled selected>Selecione uma opção...</option>
-                    <option value="Dinheiro">💵 Dinheiro</option>
-                    <option value="Pix">📱 Pix</option>
-                    <option value="Cartão de Débito">💳 Débito</option>
-                    <option value="Cartão de Crédito">💳 Crédito</option>
-                </select>
-                <div class="absolute right-4 top-[40px] pointer-events-none">
-                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            <div class="mb-6">
+                <p class="text-[14px] font-bold text-[#64748B] mb-2">Adicionar Pagamento:</p>
+                <div class="relative">
+                    <select id="select-metodo" 
+                            onchange="adicionarLinhaPagamento(this.value)"
+                            class="w-full p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[16px] appearance-none font-semibold text-[#1E293B] focus:outline-none cursor-pointer">
+                        <option value="" disabled selected>Selecione uma opção...</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Débito">Cartão de Débito</option>
+                        <option value="Crédito">Cartão de Crédito</option>
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#64748B]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
                 </div>
             </div>
 
-            <button id="btn-finalizar" 
+            <button id="btn-confirmar" 
                     disabled
-                    class="w-full h-16 mt-8 bg-blue-600/20 text-blue-400/50 font-bold rounded-2xl uppercase tracking-widest transition-all">
+                    class="w-full py-5 bg-[#C7D2FE] text-[#6366F1] font-bold rounded-[20px] transition-all uppercase tracking-widest text-[15px]">
                 CONFIRMAR E EMITIR
             </button>
         </div>
     </div>
 
     <script>
-        let totalTotal = 150.00;
-        let pagamentosRealizados = [];
+        let totalVenda = 150.00;
+        let pagamentos = [];
 
-        function adicionarInputPagamento(metodo) {
+        function adicionarLinhaPagamento(metodo) {
             if (!metodo) return;
-
             const id = Date.now();
-            const lista = document.getElementById('lista-pagamentos');
+            const container = document.getElementById('lista-pagamentos');
 
-            const item = document.createElement('div');
-            item.id = `pg-${id}`;
-            item.className = "p-4 bg-slate-800/50 border border-slate-700 rounded-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300";
-            item.innerHTML = `
-                <div class="flex-1">
-                    <p class="text-[10px] font-bold text-blue-400 uppercase mb-1">${metodo}</p>
-                    <div class="flex items-center gap-2">
-                        <span class="text-slate-500 font-bold">R$</span>
-                        <input type="number" step="0.01" placeholder="0,00"
-                               class="bg-transparent w-full text-xl font-bold text-white outline-none"
-                               oninput="atualizarValorPg(${id}, this.value)">
-                    </div>
+            const div = document.createElement('div');
+            div.id = `pg-${id}`;
+            div.className = "flex items-center gap-3 p-4 bg-[#F8FAFC] rounded-[16px] border border-[#E2E8F0]";
+            div.innerHTML = `
+                <div class="flex-1 font-bold text-[#475569]">${metodo}</div>
+                <div class="w-28 flex items-center bg-white border border-[#E2E8F0] rounded-[12px] px-3">
+                    <span class="text-[#94A3B8] text-sm font-bold">R$</span>
+                    <input type="number" step="0.01" placeholder="0,00"
+                           class="w-full p-2 outline-none font-bold text-[#1E293B]"
+                           oninput="atualizarValorPg(${id}, this.value)">
                 </div>
-                <button onclick="removerPg(${id})" class="text-slate-500 hover:text-red-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button onclick="removerPg(${id})" class="text-[#94A3B8] hover:text-red-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
             `;
 
-            lista.appendChild(item);
-            pagamentosRealizados.push({ id, metodo, valor: 0 });
-            document.getElementById('select-pagamento').value = ""; // Limpa o seletor
-            recalcular();
+            container.appendChild(div);
+            pagamentos.push({ id, metodo, valor: 0 });
+            document.getElementById('select-metodo').value = ""; // Limpa o menu
+            checarStatus();
         }
 
         function atualizarValorPg(id, val) {
-            const p = pagamentosRealizados.find(x => x.id === id);
+            const p = pagamentos.find(x => x.id === id);
             if (p) p.valor = parseFloat(val) || 0;
-            recalcular();
+            checarStatus();
         }
 
         function removerPg(id) {
-            pagamentosRealizados = pagamentosRealizados.filter(x => x.id !== id);
+            pagamentos = pagamentos.filter(x => x.id !== id);
             document.getElementById(`pg-${id}`).remove();
-            recalcular();
+            checarStatus();
         }
 
-        function recalcular() {
-            const pago = pagamentosRealizados.reduce((acc, curr) => acc + curr.value, 0);
-            const falta = totalTotal - pago;
-            const display = document.getElementById('valor-restante');
-            const btn = document.getElementById('btn-finalizar');
+        function checarStatus() {
+            const totalPago = pagamentos.reduce((acc, curr) => acc + curr.value, 0);
+            const btn = document.getElementById('btn-confirmar');
 
-            display.innerText = `R$ ${Math.max(0, falta).toFixed(2).replace('.', ',')}`;
-
-            if (falta <= 0) {
-                display.classList.replace('text-blue-400', 'text-green-400');
+            if (totalPago >= totalVenda) {
                 btn.disabled = false;
-                btn.className = "w-full h-16 mt-8 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-900/20 uppercase tracking-widest cursor-pointer active:scale-95 transition-all";
+                btn.className = "w-full py-5 bg-[#6366F1] text-white font-bold rounded-[20px] transition-all uppercase tracking-widest text-[15px] shadow-lg shadow-indigo-100";
             } else {
-                display.classList.replace('text-green-400', 'text-blue-400');
                 btn.disabled = true;
-                btn.className = "w-full h-16 mt-8 bg-blue-600/20 text-blue-400/50 font-bold rounded-2xl uppercase tracking-widest cursor-not-allowed";
+                btn.className = "w-full py-5 bg-[#C7D2FE] text-[#6366F1] font-bold rounded-[20px] transition-all uppercase tracking-widest text-[15px]";
             }
         }
     </script>
