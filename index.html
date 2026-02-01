@@ -3,113 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Protótipo de Vendas</title>
+    <title>PDV PRO - Pagamento</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .base-card { border-radius: 24px; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-8">
 
     <div class="max-w-md mx-auto space-y-4">
         
-        <div class="bg-[#EEF2FF] p-6 rounded-[24px]">
-            <h2 class="text-[#1E293B] text-xl font-bold mb-6">Resumo do Pedido</h2>
+        <div class="bg-white p-6 base-card shadow-sm border border-gray-100">
+            <h2 class="text-[#1e293b] text-xl font-bold mb-6">Resumo do Pedido</h2>
             <div class="flex justify-between items-center">
-                <span class="text-[#64748B]">Itens Selecionados</span>
-                <span class="text-[#1E293B] text-xl font-bold">R$ 150,00</span>
+                <span class="text-gray-400 font-medium">Itens Selecionados</span>
+                <span class="text-[#1e293b] text-xl font-bold" id="total-venda-display">R$ 150,00</span>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-[24px] shadow-sm border border-[#F1F5F9]">
-            <h2 class="text-[#1E293B] text-xl font-bold mb-6">Finalizar Venda</h2>
+        <div class="bg-white p-6 base-card shadow-sm border border-gray-100">
+            <h2 class="text-[#1e293b] text-xl font-bold mb-6">Finalizar Venda</h2>
 
-            <div id="lista-pagamentos" class="space-y-3 mb-4">
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-[#ebf5ff] p-4 rounded-2xl text-center border border-[#dbeafe]">
+                    <p class="text-[10px] font-bold text-[#1e40af] uppercase mb-1">Total da Venda</p>
+                    <p class="text-xl font-black text-[#1e40af]">R$ 150,00</p>
+                </div>
+                <div id="status-box-restante" class="bg-[#fef2f2] p-4 rounded-2xl text-center border border-[#fee2e2]">
+                    <p class="text-[10px] font-bold text-[#b91c1c] uppercase mb-1">Restante a Pagar</p>
+                    <p id="valor-restante-texto" class="text-xl font-black text-[#b91c1c]">R$ 150,00</p>
+                </div>
+            </div>
+
+            <div id="container-pagamentos" class="space-y-3 mb-6">
                 </div>
 
-            <div class="mb-6">
-                <p class="text-[14px] font-bold text-[#64748B] mb-2">Adicionar Pagamento:</p>
+            <div class="space-y-2">
+                <p class="text-sm font-bold text-gray-400 ml-1">Adicionar Pagamento:</p>
                 <div class="relative">
-                    <select id="select-metodo" 
-                            onchange="adicionarLinhaPagamento(this.value)"
-                            class="w-full p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[16px] appearance-none font-semibold text-[#1E293B] focus:outline-none cursor-pointer">
-                        <option value="" disabled selected>Selecione uma opção...</option>
+                    <select onchange="adicionarLinha(this.value)" id="select-metodo-pg"
+                            class="w-full p-4 bg-white border-2 border-gray-100 rounded-2xl appearance-none font-semibold text-gray-700 outline-none focus:border-blue-200 cursor-pointer">
+                        <option value="" disabled selected>Clique para escolher a forma...</option>
                         <option value="Dinheiro">Dinheiro</option>
-                        <option value="Pix">Pix</option>
                         <option value="Débito">Cartão de Débito</option>
                         <option value="Crédito">Cartão de Crédito</option>
+                        <option value="Pix">Pix</option>
                     </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#64748B]">
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                 </div>
             </div>
 
-            <button id="btn-confirmar" 
-                    disabled
-                    class="w-full py-5 bg-[#C7D2FE] text-[#6366F1] font-bold rounded-[20px] transition-all uppercase tracking-widest text-[15px]">
+            <button id="btn-confirmar-venda" disabled
+                    class="w-full mt-8 py-5 bg-[#dbeafe] text-[#3b82f6] font-bold rounded-[20px] transition-all uppercase tracking-widest text-sm">
                 CONFIRMAR E EMITIR
             </button>
         </div>
     </div>
 
     <script>
-        let totalVenda = 150.00;
-        let pagamentos = [];
+        let totalPedido = 150.00;
+        let pgsAtivos = [];
 
-        function adicionarLinhaPagamento(metodo) {
-            if (!metodo) return;
+        function adicionarLinha(metodo) {
+            if(!metodo) return;
             const id = Date.now();
-            const container = document.getElementById('lista-pagamentos');
-
+            const container = document.getElementById('container-pagamentos');
+            
             const div = document.createElement('div');
             div.id = `pg-${id}`;
-            div.className = "flex items-center gap-3 p-4 bg-[#F8FAFC] rounded-[16px] border border-[#E2E8F0]";
+            div.className = "flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 animate-in fade-in duration-300";
             div.innerHTML = `
-                <div class="flex-1 font-bold text-[#475569]">${metodo}</div>
-                <div class="w-28 flex items-center bg-white border border-[#E2E8F0] rounded-[12px] px-3">
-                    <span class="text-[#94A3B8] text-sm font-bold">R$</span>
-                    <input type="number" step="0.01" placeholder="0,00"
-                           class="w-full p-2 outline-none font-bold text-[#1E293B]"
-                           oninput="atualizarValorPg(${id}, this.value)">
+                <div class="flex-1 font-bold text-gray-600">${metodo}</div>
+                <div class="w-32 bg-white border border-gray-200 rounded-xl px-3 flex items-center shadow-sm">
+                    <span class="text-gray-400 text-sm font-bold">R$</span>
+                    <input type="number" step="0.01" class="w-full p-2 outline-none font-bold text-gray-800 bg-transparent" 
+                           oninput="setValor(${id}, this.value)" placeholder="0,00">
                 </div>
-                <button onclick="removerPg(${id})" class="text-[#94A3B8] hover:text-red-500">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <button onclick="removerLinha(${id})" class="text-gray-300 hover:text-red-500 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
                 </button>
             `;
-
             container.appendChild(div);
-            pagamentos.push({ id, metodo, valor: 0 });
-            document.getElementById('select-metodo').value = ""; // Limpa o menu
-            checarStatus();
+            pgsAtivos.push({id, valor: 0});
+            document.getElementById('select-metodo-pg').value = ""; // Reseta o menu
+            atualizarTudo();
         }
 
-        function atualizarValorPg(id, val) {
-            const p = pagamentos.find(x => x.id === id);
-            if (p) p.valor = parseFloat(val) || 0;
-            checarStatus();
+        function setValor(id, v) {
+            const p = pgsAtivos.find(x => x.id === id);
+            if(p) p.valor = parseFloat(v) || 0;
+            atualizarTudo();
         }
 
-        function removerPg(id) {
-            pagamentos = pagamentos.filter(x => x.id !== id);
+        function removerLinha(id) {
+            pgsAtivos = pgsAtivos.filter(x => x.id !== id);
             document.getElementById(`pg-${id}`).remove();
-            checarStatus();
+            atualizarTudo();
         }
 
-        function checarStatus() {
-            const totalPago = pagamentos.reduce((acc, curr) => acc + curr.value, 0);
-            const btn = document.getElementById('btn-confirmar');
+        function atualizarTudo() {
+            const totalPago = pgsAtivos.reduce((acc, c) => acc + c.valor, 0);
+            const saldo = totalPedido - totalPago;
+            
+            const btn = document.getElementById('btn-confirmar-venda');
+            const txtRestante = document.getElementById('valor-restante-texto');
+            const boxRestante = document.getElementById('status-box-restante');
 
-            if (totalPago >= totalVenda) {
+            txtRestante.innerText = `R$ ${Math.max(0, saldo).toFixed(2).replace('.', ',')}`;
+
+            if(saldo <= 0) {
+                // Estado: Pago (Verde)
+                boxRestante.className = "bg-[#f0fdf4] p-4 rounded-2xl text-center border border-[#dcfce7]";
+                txtRestante.className = "text-xl font-black text-[#15803d]";
+                
                 btn.disabled = false;
-                btn.className = "w-full py-5 bg-[#6366F1] text-white font-bold rounded-[20px] transition-all uppercase tracking-widest text-[15px] shadow-lg shadow-indigo-100";
+                btn.className = "w-full mt-8 py-5 bg-[#3b82f6] text-white font-bold rounded-[20px] shadow-lg shadow-blue-100 uppercase tracking-widest text-sm cursor-pointer";
             } else {
+                // Estado: Pendente (Vermelho)
+                boxRestante.className = "bg-[#fef2f2] p-4 rounded-2xl text-center border border-[#fee2e2]";
+                txtRestante.className = "text-xl font-black text-[#b91c1c]";
+                
                 btn.disabled = true;
-                btn.className = "w-full py-5 bg-[#C7D2FE] text-[#6366F1] font-bold rounded-[20px] transition-all uppercase tracking-widest text-[15px]";
+                btn.className = "w-full mt-8 py-5 bg-[#dbeafe] text-[#3b82f6] font-bold rounded-[20px] uppercase tracking-widest text-sm";
             }
         }
     </script>
-
 </body>
 </html>
