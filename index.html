@@ -1,1 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDV PRO | Protótipo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: white; font-family: sans-serif; overflow: hidden; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .active-btn { color: #22c55e; border-bottom: 3px solid #22c55e; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .input-pay { background: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 12px; outline: none; width: 100%; text-align: right; font-weight: bold; }
+        .input-pay:focus { border-color: #22c55e; }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <div id="modal-pag" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-4">
+        <div class="glass w-full max-w-md p-6 rounded-[2.5rem]">
+            <h3 class="text-xl font-black mb-6 flex justify-between uppercase italic">Pagamento <button onclick="fecharModal('modal-pag')">&times;</button></h3>
+            
+            <div class="bg-[#1e293b] p-6 rounded-3xl mb-6 text-center border border-slate-800 shadow-inner">
+                <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Total da Venda</p>
+                <span class="text-4xl font-black text-[#22c55e]" id="pag-total-devido">R$ 0,00</span>
+            </div>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4 items-center">
+                    <label class="text-xs font-bold text-gray-400 uppercase"><i class="fas fa-money-bill-wave mr-2"></i> Dinheiro</label>
+                    <input type="number" id="pay-dinheiro" oninput="fluxoPagamento()" class="input-pay text-green-500" placeholder="0.00">
+                </div>
+                <div class="grid grid-cols-2 gap-4 items-center">
+                    <label class="text-xs font-bold text-gray-400 uppercase"><i class="fas fa-credit-card mr-2"></i> Débito</label>
+                    <input type="number" id="pay-debito" oninput="fluxoPagamento()" class="input-pay" placeholder="0.00">
+                </div>
+                <div class="grid grid-cols-2 gap-4 items-center">
+                    <label class="text-xs font-bold text-gray-400 uppercase"><i class="fas fa-credit-card mr-2"></i> Crédito</label>
+                    <input type="number" id="pay-credito" oninput="fluxoPagamento()" class="input-pay" placeholder="0.00">
+                </div>
+                <div class="grid grid-cols-2 gap-4 items-center">
+                    <label class="text-xs font-bold text-gray-400 uppercase"><i class="fas fa-bolt mr-2"></i> Pix</label>
+                    <input type="number" id="pay-pix" oninput="fluxoPagamento()" class="input-pay" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-slate-800 space-y-2">
+                <div class="flex justify-between font-bold">
+                    <span class="text-gray-400 uppercase text-[10px]">Faltando:</span>
+                    <span id="pag-faltando" class="text-red-500">R$ 0,00</span>
+                </div>
+                <div id="div-troco" class="flex justify-between font-bold hidden">
+                    <span class="text-gray-400 uppercase text-[10px]">Troco (Dinheiro):</span>
+                    <span id="pag-troco" class="text-blue-400">R$ 0,00</span>
+                </div>
+                <button id="btn-concluir" disabled onclick="concluirVenda()" class="w-full bg-slate-800 text-gray-500 font-black py-4 rounded-2xl mt-4 uppercase tracking-widest transition cursor-not-allowed">Finalizar</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bg-slate-950 border-b border-slate-900 flex px-2 pt-2">
+        <button onclick="mudarAba('vendas', this)" class="aba-btn active-btn py-4 text-[10px] font-black uppercase flex-1">Vendas</button>
+        <button onclick="mudarAba('estoque', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500">Estoque</button>
+        <button onclick="mudarAba('balanco', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500">Balanço</button>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto p-5 pb-44">
+        <div id="vendas" class="tab-content active">
+            <div id="vendas-container" class="space-y-6"></div>
+        </div>
+
+        <div id="estoque" class="tab-content">
+            <div class="glass p-5 rounded-3xl mb-6">
+                <h3 class="text-[10px] font-black uppercase text-green-500 mb-4 tracking-widest">Categorias</h3>
+                <div id="categorias-lista" class="flex flex-wrap gap-2 mb-4"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="nova-cat" class="bg-slate-900 border border-slate-800 rounded-xl p-2 flex-1 text-xs" placeholder="Nova Categoria">
+                    <button onclick="addCat()" class="bg-green-500 text-black px-4 rounded-xl font-bold">+</button>
+                </div>
+            </div>
+            <div id="estoque-lista" class="space-y-3"></div>
+        </div>
+
+        <div id="balanco" class="tab-content">
+            <div class="glass p-8 rounded-[2rem] text-center border-b-4 border-green-500">
+                <p class="text-gray-500 text-[10px] font-bold uppercase mb-2">Total Bruto</p>
+                <h3 id="bal-bruto" class="text-4xl font-black italic text-green-500">R$ 0,00</h3>
+            </div>
+        </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 glass border-t border-white/5 p-6 rounded-t-[2.5rem] z-50">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-[8px] uppercase text-gray-500 font-black tracking-widest">Total Pedido</p>
+                <h2 id="total-display" class="text-3xl font-black italic">R$ 0,00</h2>
+            </div>
+            <button onclick="abrirPagamento()" class="bg-green-500 text-black font-black px-10 py-5 rounded-2xl shadow-2xl shadow-green-900/40 active:scale-95 transition text-xs uppercase tracking-widest">Pagar</button>
+        </div>
+    </footer>
+
+    <script>
+        let categorias = ['Lanches', 'Bebidas'];
+        let produtos = [
+            { id: 1, n: 'Burger Pro', p: 25.00, c: 'Lanches', e: 10 },
+            { id: 2, n: 'Coca Lata', p: 7.00, c: 'Bebidas', e: 50 }
+        ];
+        let faturamento = 0;
+        let totalPedido = 0;
+
+        function renderVendas() {
+            const container = document.getElementById('vendas-container');
+            container.innerHTML = categorias.map(cat => `
+                <div>
+                    <h3 class="text-[10px] font-black uppercase text-green-500 mb-4 tracking-[0.2em]">${cat}</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        ${produtos.filter(p => p.c === cat).map(p => `
+                            <div onclick="add(${p.id})" class="glass p-5 rounded-2xl active:bg-green-500 transition">
+                                <h4 class="font-bold text-sm">${p.n}</h4>
+                                <p class="text-xs text-gray-400">R$ ${p.p.toFixed(2)}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderEstoque() {
+            document.getElementById('estoque-lista').innerHTML = produtos.map(p => `
+                <div class="glass p-4 rounded-2xl flex justify-between items-center">
+                    <div><h4 class="font-bold text-sm text-green-500">${p.n}</h4><p class="text-[9px] text-gray-500 font-black uppercase">${p.c} | ${p.e} UNID.</p></div>
+                    <div class="flex gap-2"><button class="text-blue-400 p-2"><i class="fas fa-edit"></i></button><button class="text-red-500 p-2"><i class="fas fa-trash"></i></button></div>
+                </div>
+            `).join('');
+            
+            document.getElementById('categorias-lista').innerHTML = categorias.map(c => `
+                <span class="bg-slate-900 border border-slate-700 px-3 py-1 rounded-full text-[9px] font-black uppercase">${c}</span>
+            `).join('');
+        }
+
+        function add(id) {
+            const p = produtos.find(x => x.id === id);
+            totalPedido += p.p;
+            document.getElementById('total-display').innerText = `R$ ${totalPedido.toFixed(2)}`;
+        }
+
+        function abrirPagamento() {
+            if (totalPedido === 0) return alert("Selecione itens!");
+            document.getElementById('pag-total-devido').innerText = `R$ ${totalPedido.toFixed(2)}`;
+            document.getElementById('modal-pag').classList.remove('hidden');
+            fluxoPagamento();
+        }
+
+        function fluxoPagamento() {
+            const d = parseFloat(document.getElementById('pay-dinheiro').value) || 0;
+            const deb = parseFloat(document.getElementById('pay-debito').value) || 0;
+            const cre = parseFloat(document.getElementById('pay-credito').value) || 0;
+            const pix = parseFloat(document.getElementById('pay-pix').value) || 0;
+            
+            const totalPago = d + deb + cre + pix;
+            const falta = totalPedido - totalPago;
+            const troco = d > 0 && totalPago > totalPedido ? totalPago - totalPedido : 0;
+            
+            const txtFalta = document.getElementById('pag-faltando');
+            const txtTroco = document.getElementById('pag-troco');
+            const divTroco = document.getElementById('div-troco');
+            const btn = document.getElementById('btn-concluir');
+
+            if(falta <= 0) {
+                txtFalta.innerText = "PAGO";
+                txtFalta.className = "text-green-500";
+                btn.disabled = false;
+                btn.className = "w-full bg-green-500 text-black font-black py-4 rounded-2xl mt-4 uppercase tracking-widest shadow-xl shadow-green-900/40";
+                if(troco > 0) { divTroco.classList.remove('hidden'); txtTroco.innerText = `R$ ${troco.toFixed(2)}`; } 
+                else { divTroco.classList.add('hidden'); }
+            } else {
+                txtFalta.innerText = `R$ ${falta.toFixed(2)}`;
+                txtFalta.className = "text-red-500";
+                btn.disabled = true;
+                btn.className = "w-full bg-slate-800 text-gray-500 font-black py-4 rounded-2xl mt-4 uppercase tracking-widest cursor-not-allowed";
+                divTroco.classList.add('hidden');
+            }
+        }
+
+        function concluirVenda() {
+            faturamento += totalPedido;
+            document.getElementById('bal-bruto').innerText = `R$ ${faturamento.toFixed(2)}`;
+            alert("VENDA FINALIZADA! ✅");
+            totalPedido = 0;
+            document.getElementById('total-display').innerText = `R$ 0,00`;
+            document.querySelectorAll('input').forEach(i => i.value = '');
+            fecharModal('modal-pag');
+        }
+
+        function mudarAba(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.aba-btn').forEach(b => { b.classList.remove('active-btn'); b.classList.add('text-gray-500'); });
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active-btn');
+            btn.classList.remove('text-gray-500');
+        }
+
+        function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function addCat() {
+            const n = document.getElementById('nova-cat').value;
+            if(n) { categorias.push(n); document.getElementById('nova-cat').value = ''; renderVendas(); renderEstoque(); }
+        }
+
+        renderVendas(); renderEstoque();
+    </script>
+</body>
+</html>
 
