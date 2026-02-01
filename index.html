@@ -3,258 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDV PRO | Edição Premium</title>
+    <title>Sistema de Vendas Profissional</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .active-btn { color: #22c55e; border-bottom: 3px solid #22c55e; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .input-dark { background: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 10px; outline: none; transition: 0.3s; }
-        .input-dark:focus { border-color: #22c55e; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .animate-slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body class="p-4 md:p-8">
 
-    <div id="modal-pag" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-4">
-        <div class="glass w-full max-w-md p-6 rounded-[2.5rem]">
-            <h3 class="text-xl font-black mb-6 flex justify-between uppercase italic">Pagamento <button onclick="fecharModal('modal-pag')">&times;</button></h3>
-            
-            <div class="bg-slate-900/50 p-5 rounded-2xl mb-6 border border-slate-800">
-                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Total da Venda</p>
-                <span class="text-3xl font-black text-green-500" id="pag-total-devido">R$ 0,00</span>
-            </div>
-
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-3 items-center">
-                    <label class="text-xs font-bold text-gray-400 uppercase tracking-tighter"><i class="fas fa-money-bill-wave mr-2"></i> Dinheiro</label>
-                    <input type="number" id="pay-dinheiro" oninput="fluxoPagamento()" class="input-dark text-green-500 font-bold" placeholder="0.00">
-                </div>
-                <div class="grid grid-cols-2 gap-3 items-center">
-                    <label class="text-xs font-bold text-gray-400 uppercase tracking-tighter"><i class="fas fa-credit-card mr-2"></i> Débito</label>
-                    <input type="number" id="pay-debito" oninput="fluxoPagamento()" class="input-dark" placeholder="0.00">
-                </div>
-                <div class="grid grid-cols-2 gap-3 items-center">
-                    <label class="text-xs font-bold text-gray-400 uppercase tracking-tighter"><i class="fas fa-credit-card mr-2"></i> Crédito</label>
-                    <input type="number" id="pay-credito" oninput="fluxoPagamento()" class="input-dark" placeholder="0.00">
-                </div>
-                <div class="grid grid-cols-2 gap-3 items-center">
-                    <label class="text-xs font-bold text-gray-400 uppercase tracking-tighter"><i class="fas fa-bolt mr-2"></i> Pix</label>
-                    <input type="number" id="pay-pix" oninput="fluxoPagamento()" class="input-dark" placeholder="0.00">
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Resumo do Pedido</h2>
+            <div id="cart-items" class="divide-y divide-gray-100">
+                <div class="py-2 flex justify-between text-gray-600">
+                    <span>Itens Selecionados</span>
+                    <span class="font-semibold text-gray-900" id="display-total">R$ 150,00</span>
                 </div>
             </div>
+        </div>
 
-            <div class="mt-8 pt-6 border-t border-slate-800 space-y-2">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-400">Faltando:</span> <span id="pag-faltando" class="font-bold text-red-500">R$ 0,00</span>
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-700">Finalizar Venda</h3>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
+                        <p class="text-xs uppercase tracking-wider text-blue-600 font-bold mb-1">Total da Venda</p>
+                        <p id="val-total-venda" class="text-2xl font-black text-blue-900">R$ 150,00</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg border border-red-100 text-center" id="container-restante">
+                        <p class="text-xs uppercase tracking-wider text-red-600 font-bold mb-1">Restante a Pagar</p>
+                        <p id="val-restante" class="text-2xl font-black text-red-600">R$ 150,00</p>
+                    </div>
                 </div>
-                <div id="div-troco" class="flex justify-between text-sm hidden">
-                    <span class="text-gray-400">Troco:</span> <span id="pag-troco" class="font-bold text-blue-400">R$ 0,00</span>
+
+                <div id="payments-list" class="space-y-3 mb-6">
+                    </div>
+
+                <div id="selector-wrapper" class="relative group">
+                    <label class="block text-sm font-bold text-gray-500 mb-2 ml-1">Adicionar Pagamento:</label>
+                    <div class="relative">
+                        <select id="payment-dropdown" 
+                                onchange="handleSelection(this.value)"
+                                class="w-full h-14 pl-4 pr-10 bg-white border-2 border-gray-200 rounded-xl appearance-none focus:border-blue-500 focus:ring-0 transition-all cursor-pointer text-gray-700 font-medium">
+                            <option value="" disabled selected>Clique para escolher a forma...</option>
+                            <option value="Dinheiro">💵 Dinheiro</option>
+                            <option value="Pix">📱 Pix</option>
+                            <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                            <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
                 </div>
-                <button id="btn-concluir" disabled onclick="concluirVenda()" class="w-full bg-slate-800 text-gray-600 font-black py-4 rounded-2xl mt-4 uppercase tracking-widest transition cursor-not-allowed">Concluir</button>
+
+                <div class="mt-10 border-t pt-6">
+                    <button id="btn-finalizar" 
+                            disabled 
+                            onclick="finalizarVenda()"
+                            class="w-full h-16 bg-gray-300 text-white text-lg font-black rounded-xl shadow-md transition-all uppercase tracking-widest cursor-not-allowed">
+                        Confirmar e Emitir
+                    </button>
+                    <p id="troco-display" class="hidden text-center mt-3 font-bold text-green-600 animate-slide-in"></p>
+                </div>
             </div>
         </div>
     </div>
 
-    <header class="bg-slate-950 p-5 border-b border-slate-900 flex justify-between items-center">
-        <div><h1 class="font-black text-2xl italic tracking-tighter">PDV <span class="text-green-500">PRO</span></h1></div>
-        <div class="flex gap-4">
-            <div class="text-right hidden md:block">
-                <p class="text-[8px] uppercase text-gray-500 font-bold">Vendas Hoje</p>
-                <p id="head-vendas" class="font-bold text-green-500 text-sm">R$ 0,00</p>
-            </div>
-        </div>
-    </header>
-
-    <nav class="bg-slate-950 border-b border-slate-900 flex px-2">
-        <button onclick="mudarAba('vendas', this)" class="aba-btn active-btn py-4 text-[10px] font-black uppercase flex-1">Vendas</button>
-        <button onclick="mudarAba('estoque', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500">Estoque / Categorias</button>
-        <button onclick="mudarAba('balanco', this)" class="aba-btn py-4 text-[10px] font-black uppercase flex-1 text-gray-500">Balanço</button>
-    </nav>
-
-    <main class="flex-1 overflow-y-auto p-5 pb-40">
-        <div id="vendas" class="tab-content active">
-            <div id="vendas-container"></div>
-        </div>
-
-        <div id="estoque" class="tab-content">
-            <div class="glass p-6 rounded-3xl mb-6">
-                <h3 class="text-xs font-black uppercase text-green-500 mb-4 tracking-widest">Categorias</h3>
-                <div id="categorias-lista" class="flex flex-wrap gap-2 mb-4"></div>
-                <div class="flex gap-2">
-                    <input type="text" id="nova-cat" class="input-dark flex-1 text-sm p-2" placeholder="Nome da Categoria">
-                    <button onclick="addCategoria()" class="bg-green-500 text-black px-4 rounded-xl font-bold">+</button>
-                </div>
-            </div>
-            
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xs font-black uppercase tracking-widest">Produtos</h3>
-                <button onclick="abrirNovoProduto()" class="text-[10px] bg-slate-800 px-3 py-1 rounded-lg border border-slate-700">+ NOVO ITEM</button>
-            </div>
-            <div id="estoque-lista" class="space-y-3"></div>
-        </div>
-
-        <div id="balanco" class="tab-content">
-            <h2 class="text-xs font-black uppercase text-green-500 mb-6 tracking-widest text-center">Resumo Financeiro</h2>
-            <div class="grid gap-4">
-                <div class="glass p-8 rounded-[2rem] text-center border-b-4 border-green-500">
-                    <p class="text-gray-500 text-xs font-bold uppercase mb-2">Total Bruto</p>
-                    <h3 id="bal-bruto" class="text-4xl font-black italic">R$ 0,00</h3>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="glass p-5 rounded-3xl text-center">
-                        <p class="text-[10px] text-gray-500 uppercase font-bold">Pedidos</p>
-                        <h4 id="bal-pedidos" class="text-xl font-black">0</h4>
-                    </div>
-                    <div class="glass p-5 rounded-3xl text-center">
-                        <p class="text-[10px] text-gray-500 uppercase font-bold">Ticket Médio</p>
-                        <h4 id="bal-ticket" class="text-xl font-black text-green-500">R$ 0,00</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="fixed bottom-0 left-0 right-0 glass border-t border-white/5 p-6 rounded-t-[2.5rem] z-50">
-        <div class="flex justify-between items-center">
-            <div>
-                <p class="text-[8px] uppercase text-gray-500 font-black tracking-widest">Total do Cupom</p>
-                <h2 id="total-display" class="text-3xl font-black italic">R$ 0,00</h2>
-            </div>
-            <button onclick="abrirPagamento()" class="bg-green-500 text-black font-black px-10 py-5 rounded-2xl shadow-2xl shadow-green-900/40 active:scale-95 transition text-xs uppercase tracking-widest">Finalizar</button>
-        </div>
-    </footer>
-
     <script>
-        let categorias = ['Lanches', 'Bebidas'];
-        let produtos = [
-            { id: 1, n: 'Burger Pro', p: 25.00, c: 'Lanches', e: 10 },
-            { id: 2, n: 'Coca Lata', p: 7.00, c: 'Bebidas', e: 50 }
-        ];
-        let faturamento = 0;
-        let qtdPedidos = 0;
-        let totalPedido = 0;
+        // Dados iniciais (esses valores viriam do seu sistema de carrinho)
+        let totalVenda = 150.00;
+        let listaPagamentos = [];
 
-        function renderVendas() {
-            const container = document.getElementById('vendas-container');
-            container.innerHTML = categorias.map(cat => `
-                <div class="mb-8">
-                    <h3 class="text-[10px] font-black uppercase text-green-500 mb-4 tracking-[0.2em] flex items-center gap-2">
-                        <span class="w-1 h-1 bg-green-500 rounded-full"></span> ${cat}
-                    </h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        ${produtos.filter(p => p.c === cat).map(p => `
-                            <div onclick="add(${p.id})" class="glass p-5 rounded-2xl active:bg-green-500 text-left transition group">
-                                <h4 class="font-bold text-sm group-active:text-black">${p.n}</h4>
-                                <p class="text-xs text-gray-400 group-active:text-black/70">R$ ${p.p.toFixed(2)}</p>
-                            </div>
-                        `).join('')}
+        // Inicializa a tela
+        document.getElementById('val-total-venda').innerText = formatMoeda(totalVenda);
+        updateUI();
+
+        function handleSelection(metodo) {
+            if (!metodo) return;
+            
+            const rest = calcularRestante();
+            if (rest <= 0) return;
+
+            const id = Date.now();
+            listaPagamentos.push({ id, metodo, valor: 0 });
+            
+            renderPagamentos();
+            document.getElementById('payment-dropdown').value = ""; // Reseta o menu
+        }
+
+        function renderPagamentos() {
+            const container = document.getElementById('payments-list');
+            container.innerHTML = '';
+
+            listaPagamentos.forEach(p => {
+                const item = document.createElement('div');
+                item.className = "flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl shadow-sm animate-slide-in";
+                item.innerHTML = `
+                    <div class="flex-1">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-tighter">${p.metodo}</span>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">R$</span>
+                            <input type="number" step="0.01" 
+                                   value="${p.valor > 0 ? p.valor : ''}"
+                                   placeholder="0,00"
+                                   class="w-full h-12 pl-10 pr-4 border-2 border-blue-50 rounded-lg focus:border-blue-400 focus:outline-none font-bold text-lg text-gray-800"
+                                   oninput="updateValor(${p.id}, this.value)">
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                    <button onclick="removerPagamento(${p.id})" class="mt-5 p-2 text-gray-300 hover:text-red-500 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16"></path></svg>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+            updateUI();
         }
 
-        function renderEstoque() {
-            document.getElementById('estoque-lista').innerHTML = produtos.map(p => `
-                <div class="glass p-4 rounded-2xl flex justify-between items-center border-l-4 border-slate-700">
-                    <div><h4 class="font-bold text-sm text-green-500">${p.n}</h4><p class="text-[9px] text-gray-500 uppercase font-black">${p.c} | ${p.e} EM ESTOQUE</p></div>
-                    <div class="flex gap-2"><button class="text-blue-400 p-2"><i class="fas fa-pen"></i></button><button class="text-red-500 p-2"><i class="fas fa-trash"></i></button></div>
-                </div>
-            `).join('');
-            
-            document.getElementById('categorias-lista').innerHTML = categorias.map((c, i) => `
-                <span class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex items-center gap-2">
-                    ${c} <i class="fas fa-times text-red-500 cursor-pointer" onclick="removerCat(${i})"></i>
-                </span>
-            `).join('');
+        function updateValor(id, val) {
+            const p = listaPagamentos.find(item => item.id === id);
+            if (p) p.valor = parseFloat(val) || 0;
+            updateUI();
         }
 
-        function addCategoria() {
-            const val = document.getElementById('nova-cat').value;
-            if(val) { categorias.push(val); document.getElementById('nova-cat').value = ''; renderEstoque(); renderVendas(); }
+        function removerPagamento(id) {
+            listaPagamentos = listaPagamentos.filter(p => p.id !== id);
+            renderPagamentos();
         }
 
-        function removerCat(i) { categorias.splice(i, 1); renderEstoque(); renderVendas(); }
-
-        function add(id) {
-            const p = produtos.find(x => x.id === id);
-            totalPedido += p.p;
-            document.getElementById('total-display').innerText = `R$ ${totalPedido.toFixed(2)}`;
+        function calcularRestante() {
+            const pago = listaPagamentos.reduce((acc, curr) => acc + curr.value, 0);
+            return totalVenda - pago;
         }
 
-        function abrirPagamento() {
-            if (totalPedido === 0) return alert("Adicione produtos!");
-            document.getElementById('pag-total-devido').innerText = `R$ ${totalPedido.toFixed(2)}`;
-            document.getElementById('modal-pag').classList.remove('hidden');
-            fluxoPagamento();
-        }
+        function updateUI() {
+            const rest = calcularRestante();
+            const displayRest = document.getElementById('val-restante');
+            const containerRest = document.getElementById('container-restante');
+            const btn = document.getElementById('btn-finalizar');
+            const trocoMsg = document.getElementById('troco-display');
 
-        function fluxoPagamento() {
-            const dinheiro = parseFloat(document.getElementById('pay-dinheiro').value) || 0;
-            const debito = parseFloat(document.getElementById('pay-debito').value) || 0;
-            const credito = parseFloat(document.getElementById('pay-credito').value) || 0;
-            const pix = parseFloat(document.getElementById('pay-pix').value) || 0;
-            
-            const pago = dinheiro + debito + credito + pix;
-            const falta = totalPedido - pago;
-            const troco = dinheiro > 0 && pago > totalPedido ? pago - totalPedido : 0;
-            
-            const txtFalta = document.getElementById('pag-faltando');
-            const txtTroco = document.getElementById('pag-troco');
-            const divTroco = document.getElementById('div-troco');
-            const btn = document.getElementById('btn-concluir');
+            displayRest.innerText = formatMoeda(Math.abs(rest));
 
-            if(falta <= 0) {
-                txtFalta.innerText = "PAGO";
-                txtFalta.className = "font-bold text-green-500";
+            if (rest <= 0) {
+                // Pagamento concluído ou com troco
+                containerRest.classList.replace('bg-red-50', 'bg-green-50');
+                containerRest.classList.replace('border-red-100', 'border-green-100');
+                displayRest.classList.replace('text-red-600', 'text-green-600');
                 btn.disabled = false;
-                btn.className = "w-full bg-green-500 text-black font-black py-4 rounded-2xl mt-4 uppercase tracking-widest shadow-xl shadow-green-900/40";
+                btn.className = "w-full h-16 bg-green-600 hover:bg-green-700 text-white text-lg font-black rounded-xl shadow-lg transition-all cursor-pointer uppercase tracking-widest";
                 
-                if(troco > 0) {
-                    divTroco.classList.remove('hidden');
-                    txtTroco.innerText = `R$ ${troco.toFixed(2)}`;
-                } else { divTroco.classList.add('hidden'); }
+                if (rest < 0) {
+                    trocoMsg.innerText = `Troco: ${formatMoeda(Math.abs(rest))}`;
+                    trocoMsg.classList.remove('hidden');
+                } else {
+                    trocoMsg.classList.add('hidden');
+                }
             } else {
-                txtFalta.innerText = `R$ ${falta.toFixed(2)}`;
-                txtFalta.className = "font-bold text-red-500";
+                // Ainda falta pagar
+                containerRest.classList.replace('bg-green-50', 'bg-red-50');
+                containerRest.classList.replace('border-green-100', 'border-red-100');
+                displayRest.classList.replace('text-green-600', 'text-red-600');
                 btn.disabled = true;
-                btn.className = "w-full bg-slate-800 text-gray-600 font-black py-4 rounded-2xl mt-4 uppercase tracking-widest";
-                divTroco.classList.add('hidden');
+                btn.className = "w-full h-16 bg-gray-300 text-white text-lg font-black rounded-xl shadow-md cursor-not-allowed uppercase tracking-widest";
+                trocoMsg.classList.add('hidden');
             }
         }
 
-        function concluirVenda() {
-            faturamento += totalPedido;
-            qtdPedidos++;
-            
-            // Balanço
-            document.getElementById('bal-bruto').innerText = `R$ ${faturamento.toFixed(2)}`;
-            document.getElementById('head-vendas').innerText = `R$ ${faturamento.toFixed(2)}`;
-            document.getElementById('bal-pedidos').innerText = qtdPedidos;
-            document.getElementById('bal-ticket').innerText = `R$ ${(faturamento / qtdPedidos).toFixed(2)}`;
-
-            alert("VENDA CONCLUÍDA ✅");
-            totalPedido = 0;
-            document.getElementById('total-display').innerText = `R$ 0,00`;
-            document.querySelectorAll('input').forEach(i => i.value = '');
-            fecharModal('modal-pag');
-            mudarAba('balanco', document.querySelectorAll('.aba-btn')[2]);
+        function formatMoeda(v) {
+            return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
-        function mudarAba(id, btn) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.aba-btn').forEach(b => { b.classList.remove('active-btn'); b.classList.add('text-gray-500'); });
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active-btn');
-            btn.classList.remove('text-gray-500');
+        function finalizarVenda() {
+            alert("Venda finalizada com sucesso!");
+            location.reload(); // Simula o reset após finalizar
         }
-
-        function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function abrirNovoProduto() { alert("Modal de cadastro (Sistema Real)"); }
-
-        renderVendas(); renderEstoque();
     </script>
 </body>
-</html>
+    </html>
+                                
